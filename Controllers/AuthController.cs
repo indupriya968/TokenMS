@@ -7,23 +7,38 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using authentication.service;
+using Microsoft.AspNetCore.Authorization;
 
 namespace authentication.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+
+ 
+
     public class AuthController : ControllerBase
     {
         public static registeruser register = new registeruser();
 
         private readonly IConfiguration _configuration;
+        private readonly ILogin _login;
 
-        public AuthController(IConfiguration configuration)
+        public AuthController(IConfiguration configuration, ILogin login)
         {
             _configuration = configuration;
+            _login = login;
+        }
+        [HttpGet,Authorize]
+        public ActionResult <string> GetMe()
+        {
+            var Username = _login.GetUserName();
+           
+
+            return Ok(Username                                                                                                );
         }
 
-        [HttpPost("register")]
+         [HttpPost("register")]
         public async Task<ActionResult<registeruser>> Register(loginuser request)
         {
             CreatePasswordHash(request.password, out byte[] passwordHash, out byte[] passwordSalt);
@@ -44,6 +59,7 @@ namespace authentication.Controllers
             string token = CreateToken(register);
             return Ok(token );
         }
+     
         private string CreateToken(registeruser register)
         {
             List<Claim> claims = new List<Claim>
@@ -56,10 +72,10 @@ namespace authentication.Controllers
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.Now.AddMinutes(1),
+                expires: DateTime.Now.AddMinutes(2),
                 signingCredentials: cred
                 );
-
+            
             var jwt = new JwtSecurityTokenHandler().WriteToken(token);
 
             return jwt;
